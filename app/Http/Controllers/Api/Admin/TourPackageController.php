@@ -77,6 +77,6 @@ class TourPackageController extends Controller
 
         $this->tourPackages->delete($tour);
 
-        return response()->noContent();
+        return response()->json(null, Response::HTTP_NO_CONTENT);
     }
 }

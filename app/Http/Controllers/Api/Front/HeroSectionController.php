@@ -14,6 +14,8 @@ class HeroSectionController extends Controller
 
     public function show(): JsonResponse
     {
-        return response()->json($this->heroSections->getPublic());
+        $lang = request()->query('lang');
+
+        return response()->json($this->heroSections->getPublic($lang));
     }
 }

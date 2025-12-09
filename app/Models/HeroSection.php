@@ -18,10 +18,18 @@ class HeroSection extends Model
         'image_path',
         'is_active',
         'updated_by_admin_id',
+        'headline_translations',
+        'subheadline_translations',
+        'description_translations',
+        'button_text_translations',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'headline_translations' => 'array',
+        'subheadline_translations' => 'array',
+        'description_translations' => 'array',
+        'button_text_translations' => 'array',
     ];
 
     public function updatedBy()
