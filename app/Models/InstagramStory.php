@@ -12,6 +12,8 @@ class InstagramStory extends Model
     protected $fillable = [
         'title',
         'caption',
+        'title_translations',
+        'caption_translations',
         'image_path',
         'link_url',
         'is_active',
@@ -20,5 +22,7 @@ class InstagramStory extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
+        'title_translations' => 'array',
+        'caption_translations' => 'array',
     ];
 }

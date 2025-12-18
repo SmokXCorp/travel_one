@@ -25,6 +25,10 @@ class StoreInstagramStoryRequest extends FormRequest
         return [
             'title' => ['required', 'string', 'max:255'],
             'caption' => ['nullable', 'string', 'max:255'],
+            'title_translations' => ['sometimes', 'array'],
+            'title_translations.*' => ['nullable', 'string', 'max:255'],
+            'caption_translations' => ['sometimes', 'array'],
+            'caption_translations.*' => ['nullable', 'string', 'max:255'],
             'link_url' => ['nullable', 'url', 'max:255'],
             'is_active' => ['sometimes', 'boolean'],
             'sort_order' => ['nullable', 'integer', 'min:0'],

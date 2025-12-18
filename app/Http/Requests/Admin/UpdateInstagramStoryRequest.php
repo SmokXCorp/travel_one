@@ -24,6 +24,10 @@ class UpdateInstagramStoryRequest extends FormRequest
         return [
             'title' => ['sometimes', 'string', 'max:255'],
             'caption' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'title_translations' => ['sometimes', 'array'],
+            'title_translations.*' => ['nullable', 'string', 'max:255'],
+            'caption_translations' => ['sometimes', 'array'],
+            'caption_translations.*' => ['nullable', 'string', 'max:255'],
             'link_url' => ['sometimes', 'nullable', 'url', 'max:255'],
             'is_active' => ['sometimes', 'boolean'],
             'sort_order' => ['sometimes', 'nullable', 'integer', 'min:0'],
