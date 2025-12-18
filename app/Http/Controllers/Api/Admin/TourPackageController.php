@@ -20,8 +20,9 @@ class TourPackageController extends Controller
     {
         $filters = $request->only(['search', 'is_active', 'is_featured']);
         $perPage = (int) $request->integer('per_page', 15);
+        $lang = $request->query('lang');
 
-        $tours = $this->tourPackages->paginateForAdmin($filters, $perPage);
+        $tours = $this->tourPackages->paginateForAdmin($filters, $perPage, $lang);
 
         return response()->json($tours);
     }
@@ -34,9 +35,10 @@ class TourPackageController extends Controller
         return response()->json($tour, Response::HTTP_CREATED);
     }
 
-    public function show(int $id): JsonResponse
+    public function show(Request $request, int $id): JsonResponse
     {
-        $tour = $this->tourPackages->findForAdmin($id);
+        $lang = $request->query('lang');
+        $tour = $this->tourPackages->findForAdmin($id, $lang);
 
         if (!$tour) {
             return response()->json(['message' => 'Tour not found'], Response::HTTP_NOT_FOUND);
@@ -47,6 +49,7 @@ class TourPackageController extends Controller
 
     public function update(UpdateTourPackageRequest $request, int $id): JsonResponse
     {
+        $lang = $request->query('lang');
         $tour = $this->tourPackages->findForAdmin($id);
 
         if (!$tour) {
@@ -63,6 +66,10 @@ class TourPackageController extends Controller
             $request->file('images', []),
             $imagesToRemove
         );
+
+        if ($lang) {
+            $updated = $this->tourPackages->findForAdmin($id, $lang) ?? $updated;
+        }
 
         return response()->json($updated);
     }

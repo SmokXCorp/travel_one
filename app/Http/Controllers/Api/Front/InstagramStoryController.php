@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Front;
 use App\Http\Controllers\Controller;
 use App\Services\InstagramStoryService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class InstagramStoryController extends Controller
 {
@@ -12,8 +13,10 @@ class InstagramStoryController extends Controller
     {
     }
 
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        return response()->json($this->stories->listActive());
+        $lang = $request->query('lang');
+
+        return response()->json($this->stories->listActive($lang));
     }
 }

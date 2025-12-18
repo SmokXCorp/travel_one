@@ -15,28 +15,56 @@ class TourPackageService
     {
     }
 
-    public function paginateForAdmin(array $filters = [], int $perPage = 15): LengthAwarePaginator
+    public function paginateForAdmin(array $filters = [], int $perPage = 15, ?string $lang = null): LengthAwarePaginator
     {
-        return $this->tourPackages->paginateForAdmin($filters, $perPage);
+        $paginator = $this->tourPackages->paginateForAdmin($filters, $perPage);
+
+        if ($lang) {
+            $paginator->getCollection()->transform(function (TourPackage $tour) use ($lang) {
+                $this->applyTranslations($tour, $lang);
+                return $tour;
+            });
+        }
+
+        return $paginator;
     }
 
-    public function listPublic(int $limit = 0): EloquentCollection
+    public function listPublic(int $limit = 0, ?string $lang = null): EloquentCollection
     {
-        return $this->tourPackages->listPublic($limit);
+        $tours = $this->tourPackages->listPublic($limit);
+
+        if ($lang) {
+            $tours->each(fn (TourPackage $tour) => $this->applyTranslations($tour, $lang));
+        }
+
+        return $tours;
     }
 
-    public function findForAdmin(int $id): ?TourPackage
+    public function findForAdmin(int $id, ?string $lang = null): ?TourPackage
     {
-        return $this->tourPackages->findById($id);
+        $tour = $this->tourPackages->findById($id);
+
+        if ($tour && $lang) {
+            $this->applyTranslations($tour, $lang);
+        }
+
+        return $tour;
     }
 
-    public function findPublic(string $slug): ?TourPackage
+    public function findPublic(string $slug, ?string $lang = null): ?TourPackage
     {
-        return $this->tourPackages->findBySlug($slug);
+        $tour = $this->tourPackages->findBySlug($slug);
+
+        if ($tour && $lang) {
+            $this->applyTranslations($tour, $lang);
+        }
+
+        return $tour;
     }
 
     public function create(array $data, array $imageFiles = []): TourPackage
     {
+        $data = $this->mergeTranslationDefaultsForPayload($data);
         $imagePayloads = $this->storeImages($imageFiles);
         $data['primary_image_path'] = $data['primary_image_path'] ?? ($imagePayloads[0]['path'] ?? null);
 
@@ -58,6 +86,7 @@ class TourPackageService
         array $imageFiles = [],
         array $imagesToRemove = []
     ): TourPackage {
+        $data = $this->mergeTranslationDefaultsForPayload($data, $tour);
         $primaryPath = $tour->primary_image_path;
 
         if (array_key_exists('primary_image_id', $data)) {
@@ -177,5 +206,56 @@ class TourPackageService
                 Storage::disk('public')->delete($path);
             }
         }
+    }
+
+    private function mergeTranslationDefaultsForPayload(array $data, ?TourPackage $current = null): array
+    {
+        $data['title_translations'] = $this->mergeTranslationDefaults(
+            $data['title_translations'] ?? ($current?->title_translations ?? []),
+            $data['title'] ?? $current?->title
+        );
+        $data['subtitle_translations'] = $this->mergeTranslationDefaults(
+            $data['subtitle_translations'] ?? ($current?->subtitle_translations ?? []),
+            $data['subtitle'] ?? $current?->subtitle
+        );
+        $data['short_description_translations'] = $this->mergeTranslationDefaults(
+            $data['short_description_translations'] ?? ($current?->short_description_translations ?? []),
+            $data['short_description'] ?? $current?->short_description
+        );
+        $data['description_translations'] = $this->mergeTranslationDefaults(
+            $data['description_translations'] ?? ($current?->description_translations ?? []),
+            $data['description'] ?? $current?->description
+        );
+        $data['location_translations'] = $this->mergeTranslationDefaults(
+            $data['location_translations'] ?? ($current?->location_translations ?? []),
+            $data['location'] ?? $current?->location
+        );
+
+        $data['title'] = $data['title_translations']['en'] ?? $data['title'] ?? $current?->title;
+        $data['subtitle'] = $data['subtitle_translations']['en'] ?? $data['subtitle'] ?? $current?->subtitle;
+        $data['short_description'] = $data['short_description_translations']['en'] ?? $data['short_description'] ?? $current?->short_description;
+        $data['description'] = $data['description_translations']['en'] ?? $data['description'] ?? $current?->description;
+        $data['location'] = $data['location_translations']['en'] ?? $data['location'] ?? $current?->location;
+
+        return $data;
+    }
+
+    private function mergeTranslationDefaults(?array $translations, ?string $fallback): array
+    {
+        $translations = $translations ?? [];
+        if (!array_key_exists('en', $translations) && $fallback !== null) {
+            $translations['en'] = $fallback;
+        }
+
+        return $translations;
+    }
+
+    private function applyTranslations(TourPackage $tour, string $lang): void
+    {
+        $tour->title = $tour->title_translations[$lang] ?? $tour->title;
+        $tour->subtitle = $tour->subtitle_translations[$lang] ?? $tour->subtitle;
+        $tour->short_description = $tour->short_description_translations[$lang] ?? $tour->short_description;
+        $tour->description = $tour->description_translations[$lang] ?? $tour->description;
+        $tour->location = $tour->location_translations[$lang] ?? $tour->location;
     }
 }

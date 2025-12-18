@@ -15,23 +15,46 @@ class InstagramStoryService
     {
     }
 
-    public function paginateForAdmin(array $filters = [], int $perPage = 15): LengthAwarePaginator
+    public function paginateForAdmin(array $filters = [], int $perPage = 15, ?string $lang = null): LengthAwarePaginator
     {
-        return $this->stories->paginateForAdmin($filters, $perPage);
+        $paginator = $this->stories->paginateForAdmin($filters, $perPage);
+
+        if ($lang) {
+            $paginator->getCollection()->transform(function (InstagramStory $story) use ($lang) {
+                $this->applyTranslations($story, $lang);
+                return $story;
+            });
+        }
+
+        return $paginator;
     }
 
-    public function listActive(): Collection
+    public function listActive(?string $lang = null): Collection
     {
-        return $this->stories->listActive();
+        $stories = $this->stories->listActive();
+
+        if ($lang) {
+            $stories->each(fn (InstagramStory $story) => $this->applyTranslations($story, $lang));
+        }
+
+        return $stories;
     }
 
-    public function find(int $id): ?InstagramStory
+    public function find(int $id, ?string $lang = null): ?InstagramStory
     {
-        return $this->stories->findById($id);
+        $story = $this->stories->findById($id);
+
+        if ($story && $lang) {
+            $this->applyTranslations($story, $lang);
+        }
+
+        return $story;
     }
 
     public function create(array $data, ?UploadedFile $image = null): InstagramStory
     {
+        $data = $this->mergeTranslationDefaults($data);
+
         if ($image) {
             $data['image_path'] = $image->store('instagram', 'public');
         }
@@ -41,6 +64,8 @@ class InstagramStoryService
 
     public function update(InstagramStory $story, array $data, ?UploadedFile $image = null): InstagramStory
     {
+        $data = $this->mergeTranslationDefaults($data, $story);
+
         if ($image) {
             $this->deleteImage($story->image_path);
             $data['image_path'] = $image->store('instagram', 'public');
@@ -60,5 +85,30 @@ class InstagramStoryService
         if ($path) {
             Storage::disk('public')->delete($path);
         }
+    }
+
+    private function mergeTranslationDefaults(array $data, ?InstagramStory $current = null): array
+    {
+        $data['title_translations'] = $data['title_translations'] ?? $current?->title_translations ?? [];
+        $data['caption_translations'] = $data['caption_translations'] ?? $current?->caption_translations ?? [];
+
+        if (!array_key_exists('en', $data['title_translations']) && ($data['title'] ?? $current?->title)) {
+            $data['title_translations']['en'] = $data['title'] ?? $current?->title;
+        }
+
+        if (!array_key_exists('en', $data['caption_translations']) && ($data['caption'] ?? $current?->caption)) {
+            $data['caption_translations']['en'] = $data['caption'] ?? $current?->caption;
+        }
+
+        $data['title'] = $data['title_translations']['en'] ?? $data['title'] ?? $current?->title;
+        $data['caption'] = $data['caption_translations']['en'] ?? $data['caption'] ?? $current?->caption;
+
+        return $data;
+    }
+
+    private function applyTranslations(InstagramStory $story, string $lang): void
+    {
+        $story->title = $story->title_translations[$lang] ?? $story->title;
+        $story->caption = $story->caption_translations[$lang] ?? $story->caption;
     }
 }

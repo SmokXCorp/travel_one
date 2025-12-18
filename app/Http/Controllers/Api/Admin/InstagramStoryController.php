@@ -19,7 +19,8 @@ class InstagramStoryController extends Controller
     public function index(Request $request): JsonResponse
     {
         $perPage = (int) $request->integer('per_page', 15);
-        $stories = $this->stories->paginateForAdmin($request->only('is_active'), $perPage);
+        $lang = $request->query('lang');
+        $stories = $this->stories->paginateForAdmin($request->only('is_active'), $perPage, $lang);
 
         return response()->json($stories);
     }
@@ -34,9 +35,10 @@ class InstagramStoryController extends Controller
         return response()->json($story, Response::HTTP_CREATED);
     }
 
-    public function show(int $id): JsonResponse
+    public function show(Request $request, int $id): JsonResponse
     {
-        $story = $this->stories->find($id);
+        $lang = $request->query('lang');
+        $story = $this->stories->find($id, $lang);
 
         if (!$story) {
             return response()->json(['message' => 'Story not found'], Response::HTTP_NOT_FOUND);
@@ -47,6 +49,7 @@ class InstagramStoryController extends Controller
 
     public function update(UpdateInstagramStoryRequest $request, int $id): JsonResponse
     {
+        $lang = $request->query('lang');
         $story = $this->stories->find($id);
 
         if (!$story) {
@@ -58,6 +61,10 @@ class InstagramStoryController extends Controller
             $request->validated(),
             $request->file('image')
         );
+
+        if ($lang) {
+            $updated = $this->stories->find($id, $lang) ?? $updated;
+        }
 
         return response()->json($updated);
     }

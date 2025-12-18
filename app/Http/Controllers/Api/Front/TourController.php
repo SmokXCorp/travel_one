@@ -17,14 +17,16 @@ class TourController extends Controller
     public function index(Request $request): JsonResponse
     {
         $limit = (int) $request->integer('limit', 0);
-        $tours = $this->tourPackages->listPublic($limit);
+        $lang = $request->query('lang');
+        $tours = $this->tourPackages->listPublic($limit, $lang);
 
         return response()->json($tours);
     }
 
-    public function show(string $slug): JsonResponse
+    public function show(Request $request, string $slug): JsonResponse
     {
-        $tour = $this->tourPackages->findPublic($slug);
+        $lang = $request->query('lang');
+        $tour = $this->tourPackages->findPublic($slug, $lang);
 
         if (!$tour) {
             return response()->json(['message' => 'Tour not found'], Response::HTTP_NOT_FOUND);
