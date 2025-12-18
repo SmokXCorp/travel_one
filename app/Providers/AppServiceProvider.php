@@ -3,11 +3,13 @@
 namespace App\Providers;
 
 use App\Repositories\Contracts\AboutSectionRepositoryContract;
+use App\Repositories\Contracts\AboutUsSectionRepositoryContract;
 use App\Repositories\Contracts\AdminRepositoryContract;
 use App\Repositories\Contracts\HeroSectionRepositoryContract;
 use App\Repositories\Contracts\InstagramStoryRepositoryContract;
 use App\Repositories\Contracts\TourPackageRepositoryContract;
 use App\Repositories\Eloquent\EloquentAboutSectionRepository;
+use App\Repositories\Eloquent\EloquentAboutUsSectionRepository;
 use App\Repositories\Eloquent\EloquentAdminRepository;
 use App\Repositories\Eloquent\EloquentHeroSectionRepository;
 use App\Repositories\Eloquent\EloquentInstagramStoryRepository;
@@ -26,6 +28,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(InstagramStoryRepositoryContract::class, EloquentInstagramStoryRepository::class);
         $this->app->bind(HeroSectionRepositoryContract::class, EloquentHeroSectionRepository::class);
         $this->app->bind(AboutSectionRepositoryContract::class, EloquentAboutSectionRepository::class);
+        $this->app->bind(AboutUsSectionRepositoryContract::class, EloquentAboutUsSectionRepository::class);
+        $this->app->bind(\App\Repositories\Contracts\FooterContentRepositoryContract::class, \App\Repositories\Eloquent\EloquentFooterContentRepository::class);
     }
 
     /**
