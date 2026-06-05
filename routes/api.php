@@ -15,6 +15,8 @@ use App\Http\Controllers\Api\Front\FooterContentController as PublicFooterConten
 use App\Http\Controllers\Api\Front\TourController as PublicTourController;
 use Illuminate\Support\Facades\Route;
 
+Route::options('{any}', static fn () => response()->noContent())->where('any', '.*');
+
 Route::prefix('admin')->group(function (): void {
     Route::post('login', [AdminAuthController::class, 'login']);
 

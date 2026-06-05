@@ -1,5 +1,16 @@
 <?php
 
+$parseOrigins = static function (?string $value): array {
+    if (! $value) {
+        return [];
+    }
+
+    return array_map(
+        static fn (string $origin): string => rtrim(trim($origin), '/'),
+        preg_split('/\s*,\s*/', $value, -1, PREG_SPLIT_NO_EMPTY) ?: []
+    );
+};
+
 return [
 
     /*
@@ -19,12 +30,16 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => array_values(array_filter([
-        env('FRONTEND_URL', 'http://localhost:8080'),
-        env('FRONTEND_URL_ALT', 'http://127.0.0.1:8080'),
-        env('FRONTEND_URL_LAN1'),
-        env('FRONTEND_URL_LAN2'),
-    ])),
+    'allowed_origins' => array_values(array_unique(array_filter(array_merge(
+        [
+            rtrim(env('FRONTEND_URL', 'http://localhost:8080'), '/'),
+            rtrim(env('FRONTEND_URL_ALT', 'http://127.0.0.1:8080'), '/'),
+            rtrim(env('FRONTEND_URL_LAN1', ''), '/'),
+            rtrim(env('FRONTEND_URL_LAN2', ''), '/'),
+            rtrim(env('APP_URL', ''), '/'),
+        ],
+        $parseOrigins(env('CORS_ALLOWED_ORIGINS'))
+    )))),
 
     'allowed_origins_patterns' => [],
 
